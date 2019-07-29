@@ -1,6 +1,43 @@
 const mongo = require('mongodb');
 const client = new mongo.MongoClient('mongodb://localhost:27017', {useNewUrlParser: true});
 
+function showDoneTasks(dbCollection) {
+    dbCollection.find({
+        done: true
+    }).toArray((err, doneTasks) => {
+        if (err) {
+            console.log('problem listą: ', err);
+        } else {
+            console.log(`Zadania zrobione:
+            `);
+            for (const doneTask of doneTasks) {
+                console.log(`task: ${doneTask.title}`)
+                console.log(`id: ${doneTask._id}\n`)
+            }
+        }
+        client.close()
+    })
+}
+
+function showTodoTasks(dbCollection){
+    dbCollection.find({
+        done: false
+    }).toArray((err, doneTasks) => {
+        if (err) {
+            console.log('problem listą: ', err);
+        } else {
+            console.log(`Zadania do zrobienia:
+            `);
+            for (const doneTask of doneTasks) {
+                console.log(`task: ${doneTask.title}`)
+                console.log(`id: ${doneTask._id}\n`)    
+            }
+            
+        }
+        client.close()
+    })
+}
+
 function deleteTask(dbCollection, title) {
     dbCollection.find({ title }).toArray((err, task) => {
         if (err) {
@@ -31,7 +68,7 @@ function makeTaskDone(dbCollection, title){
             console.log('problem listą: ', err);
             client.close()
         } else if (task.length !== 1) {
-           console.log('nie ma takiego zadaina');
+           console.log('nie ma takiego zadania');
             client.close()
         } else if (task[0].done){
             console.log('to zadanie zostało już wcześniej zrobione');
@@ -103,6 +140,12 @@ function doTheToDo(todosCollection){
             break;
         case 'delete':
             deleteTask(todosCollection, args[0]);
+            break;
+        case 'todoTasks':
+            showTodoTasks(todosCollection);
+            break;
+        case 'doneTasks':
+            showDoneTasks(todosCollection);
             break;
     }
 
