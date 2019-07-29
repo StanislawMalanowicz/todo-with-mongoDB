@@ -1,5 +1,30 @@
 const mongo = require('mongodb');
 const client = new mongo.MongoClient('mongodb://localhost:27017', {useNewUrlParser: true});
+const colors = require('colors');
+
+function deleteDoneTasks(dbCollection) {
+    dbCollection.find({ 
+        done: true }).toArray((err, task) => {
+        if (err) {
+            console.log('problem listą: ', err);
+            client.close()
+        } else if (task.length !== 1) {
+            console.log('nie ma takiego zadaina');
+            client.close()
+        } else {
+            console.log('jest takie zadanie');
+            dbCollection.deleteMany(
+                { done: true }, err => {
+                    if (err) {
+                        console.log('problem z usunięciem zadania: ', err)
+                    } else {
+                        console.log('zadanie zostało usunięte prawidłowo')
+                    }
+                    client.close()
+                })
+        }
+    })
+}
 
 function showDoneTasks(dbCollection) {
     dbCollection.find({
@@ -49,8 +74,7 @@ function deleteTask(dbCollection, title) {
         } else {
             console.log('jest takie zadanie');
             dbCollection.deleteOne(
-                { title },
-                { $set: { done: true } }, err => {
+                { title }, err => {
                     if (err) {
                         console.log('problem z usunięciem zadania: ', err)
                     } else {
@@ -111,15 +135,16 @@ function showAllList(dbCollection){
             console.log('problem listą: ', err);
         } else {
             console.log(`Patrz i podziwiaj:
-        ############\n`);
+        `,`############\n`.rainbow);
             for(const task of tasks){
-                console.log(`id: < ${task._id} >
+                console.log(`id: <`,`${task._id}`.red,`>
                 title: ${task.title}
                 done: ${task.done}
                 ***************************
                 `)
+                
             }
-            console.log('\n         $$$$$$$$$$$$')
+            console.log('\n         $$$$$$$$$$$$'.rainbow)
         }
         client.close()
     })
@@ -147,6 +172,20 @@ function doTheToDo(todosCollection){
         case 'doneTasks':
             showDoneTasks(todosCollection);
             break;
+        case 'deleteDoneTasks':
+            deleteDoneTasks(todosCollection);
+            break;
+        default:
+            console.log('wybierz jedną z komend: \n',
+                '"add" + zadanie. '.green, 'dodaje nowe zadanie, \n',
+            '"list"'.green, 'wyświetla wszystkie zadania, \n',
+            '"done" + zadanie. '.green, 'zmienia status zadania na wykonane, \n',
+            '"delete" + zadanie. '.green, 'kasuje wybrane zadanie, \n',
+            '"todoTasks" '.green, 'wyświetla zadania do zrobienia, \n',
+            '"doneTasks" '.green, 'wyświetla zrobione zadania, \n',
+            '"deleteDoneTasks" '.green, 'usuwa zrobione zadania, \n')
+            client.close();
+            break
     }
 
   
@@ -157,13 +196,12 @@ client.connect(err =>{
     if(err){
         console.log('blad polaczenia', err);
     }else{
-        console.log('polaczono poprawnie');
+        console.log('polaczono poprawnie'.green);
+        // console.log('\x1b[36m%s\x1b[0m', 'I am cyan')
         const db = client.db('test');
         const todosCollection = db.collection('todos');
        
         doTheToDo(todosCollection);
-        
-        
     }
 });
 
